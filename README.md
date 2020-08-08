@@ -1,1 +1,1 @@
-# restful_celery
+# restcelery
