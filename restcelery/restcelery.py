@@ -29,10 +29,46 @@ from .custom_task import get_celery_task
 __all__ = ['RestCelery']
 
 
+def from_object(obj):
+    if isinstance(obj, type):
+
+        class ConfigClass(obj):
+
+            def __init__(self):
+                pass
+
+            def __getitem__(self, key):
+                return getattr(self, key)
+
+            def __setitem__(self, key, value):
+                setattr(self, key, value)
+                
+        config_obj = ConfigClass()
+    elif hasattr('__setitem__'):
+        config_obj = obj
+    else:
+        class ConfigClass:
+
+            def __init__(self):
+                self.obj = obj
+
+            def __getitem__(self, key):
+                return getattr(self.obj, key)
+
+            def __setitem__(self, key, value):
+                setattr(self.obj, key, value)
+                
+        config_obj = ConfigClass()
+    config_obj['SQLALCHEMY_DATABASE_URI'] = config_obj['PRE_STATE_DB']
+    return config_obj
+
+
 class RestCelery:
     _task_map = dict()
 
     def __init__(self, config, task_modules: List[str]):
+        config = from_object(config)
+
         self.broker_url = config['CELERY_BROKER_URL']
         m = re.match(r'((^py)|(^.*\+)|(^))(.+):\/\/', self.broker_url)
         self.broker_type = m.group(5)
@@ -43,8 +79,9 @@ class RestCelery:
 
         app = Flask(__name__)
         app.config.from_object(config)
-        self.db.init_app(app)
-        self.db.create_all(app=app)
+        db.init_app(app)
+        db.create_all(app=app)
+        self.db = db
         self.migrate = Migrate(app=app, db=db)
         self.api = Api()
         CORS(app)
