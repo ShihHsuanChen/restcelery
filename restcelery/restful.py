@@ -28,7 +28,9 @@ def _get_param_dict(task_name, func):
 
     parameters = OrderedDict(sig.parameters)
 
-    for param in parameters.values():
+    for i, param in enumerate(parameters.values()):
+        if i == 0:
+            continue
         name = param.name
         typ = param.annotation
         default = param.default
@@ -41,6 +43,7 @@ def _get_param_dict(task_name, func):
         else:
             tmp['required'] = True
         param_dict[name] = tmp
+        print(tmp)
     return param_dict
 
 
@@ -227,9 +230,9 @@ def create_restful(api, celery, task_map: dict, base_directory: str, broker_type
 
                 for pname, tmp in param_dict.items():
                     if tmp['required']:
-                        mock_args.append(f'${pname}')
+                        mock_args.append(pname)
                     else:
-                        mock_kwargs[pname] = f'${pname}'
+                        mock_kwargs[pname] = pname
                     tmp['type'] = tmp['type'].__name__
 
                 task_func = ctasks.get(fname)
