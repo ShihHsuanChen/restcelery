@@ -43,7 +43,6 @@ def _get_param_dict(task_name, func):
         else:
             tmp['required'] = True
         param_dict[name] = tmp
-        print(tmp)
     return param_dict
 
 
