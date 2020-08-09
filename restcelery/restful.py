@@ -10,6 +10,7 @@ from flask_restful import Resource, reqparse
 from celery import states as TaskStates
 from celery.contrib.testing.mocks import task_message_from_sig
 
+from .prestate import db
 from .prestate import TaskPrestate
 from .prestate import get_prestate
 from .prestate import update_task
@@ -19,6 +20,7 @@ from .utils import format_task_info
 
 
 __all__ = ['create_restful']
+
 
 def _get_param_dict(task_name, func):
     sig = inspect.signature(func)
@@ -42,7 +44,7 @@ def _get_param_dict(task_name, func):
     return param_dict
 
 
-def create_restful(api, celery, db, task_map: dict, base_directory: str, broker_type: str):
+def create_restful(api, celery, task_map: dict, base_directory: str, broker_type: str):
 
     func_dict = dict()
     for name, func in task_map.items():

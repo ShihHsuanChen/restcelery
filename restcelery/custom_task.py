@@ -11,7 +11,7 @@ def get_celery_task(base_directory: str, formatter: str, session):
         _base_directory = base_directory
         _base_logger_name = ''
         _fileformatter = formatter
-        session = session
+        _session = session
 
         def record(_self, msg: str, state='PROGRESS', log=True):
             if log:
@@ -20,7 +20,6 @@ def get_celery_task(base_directory: str, formatter: str, session):
 
         @property
         def work_directory(_self):
-            print(_self._base_directory, _self.request.id)
             return os.path.join(_self._base_directory, _self.request.id)
 
         @property
