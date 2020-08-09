@@ -96,20 +96,18 @@ class RestCelery:
         self.session = create_connection(config['PRE_STATE_DB'])
         custom_task_cls = get_celery_task(wdir, formatter, self.session)
 
-        celery = Celery(
-            backend=config['CELERY_RESULT_BACKEND'],
-            broker=config['CELERY_BROKER_URL'],
-            config_source=config,
-            task_cls=custom_task_cls
-        )
-
-        class ContextTask(CeleryTask):
-
+        class ContextTask(custom_task_cls):
             def __call__(_self, *args, **kwargs):
                 with app.app_context():
                     return _self.run(*args, **kwargs)
 
-        celery.Task = ContextTask
+        celery = Celery(
+            backend=config['CELERY_RESULT_BACKEND'],
+            broker=config['CELERY_BROKER_URL'],
+            config_source=config,
+            task_cls=ContextTask
+        )
+
         self.celery = celery
 
         self.app = app
@@ -202,15 +200,13 @@ def on_task_receive(sender=None, request=None, **_kwargs):
 
 @signals.task_prerun.connect
 def on_task_prerun(sender=None, task_id=None, task=None, args=None, kwargs=None, **_kwargs):
-    # sender=task
-    print(type(sender))
-    print(type(task))
+    # sender=task, same as the third argument "task"
     print('on_task_prerun')
 
     # create work directory
-    workdir = sender.work_directory
-    if not os.path.exists(workdir) or not os.path.isdir(workdir):
-        os.makedirs(workdir)
+    wdir = sender.work_directory
+    if not os.path.exists(wdir) or not os.path.isdir(wdir):
+        os.makedirs(wdir)
 
     # check prestate
     task_id = sender.request.id
@@ -220,7 +216,6 @@ def on_task_prerun(sender=None, task_id=None, task=None, args=None, kwargs=None,
     # revoke canceled task
     if prestate == TaskPrestate.CANCELED:
         print('cancel')
-        wdir = sender.work_directory
         if os.path.isdir(wdir):
             shutil.rmtree(wdir)
         task_result.revoke(terminate=True, signal='SIGKILL')
