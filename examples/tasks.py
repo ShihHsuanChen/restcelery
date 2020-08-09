@@ -1,6 +1,6 @@
 import time
 import logging
-from restcelery import RestCelery, get_task_logger, TaskStates
+from restcelery import RestCelery, get_task_logger
 from celery.signals import after_task_publish
 from celery import current_app
 

@@ -6,6 +6,7 @@ from config import app_config
 
 task_modules = ['tasks']
 
+
 def create_app(config_name):
     config = app_config[config_name]
     restcelery = RestCelery(config, task_modules=task_modules)
