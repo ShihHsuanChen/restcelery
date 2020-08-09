@@ -1,0 +1,4 @@
+redis
+pyamqp
+pysqlite3
+mysqlclient
